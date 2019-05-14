@@ -40,7 +40,7 @@ def background(size):
     return cells
 
 
-# @contract
+@contract
 def live_cells(cells):
     """
     :param cells: list, not null
