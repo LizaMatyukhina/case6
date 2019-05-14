@@ -4,8 +4,6 @@ from contracts import contract
 
 class Cell(Button):
 
-    # name - положение клетки!
-    # 1 цирфа это по Х, вторая по У
     def __init__(self, x, y, size, name):
         super(Cell, self).__init__(root,
                                    text='',
@@ -19,7 +17,6 @@ class Cell(Button):
         self.name = name
         self.place(x=self.x, y=self.y)
 
-    # функция которая дает возможность кликать на кнопки, не знаю зачем это тебе пигу, вроде и так понятно)))))))
     def click_button(self):
         self.alive = True
         self.configure(bg='white')
@@ -30,7 +27,6 @@ class Cell(Button):
 
 
 @contract
-# функция создающая все клетки на поле, они уже сразу объекты типа Клетка
 def background(size):
     '''
     :type size: int, <=40, != 0
@@ -52,19 +48,41 @@ def live_cells(cells):
     :rtype: list
     """
     living = []
+    dying = []
     for cell in cells:
         if cell.alive:
             living.append([cell, cell.name])
-    print(living)
-    killing(living)
+        if cell.alive == False:
+            dying.append([cell, cell.name])
+    killing(living, dying)
+
 
 @contract
-def killing(living):
+def killing(living, dying):
     '''
     :type living: list
+    :type dying: list
     '''
+    old_living = []
     while living:
-        old_living = living
+        old_living.append(living.copy())
+        for neighbor in dying:
+            n_x = neighbor[1][0]
+            n_y = neighbor[1][1]
+            neighbours = 0
+            variants = [[n_x - 1, n_y + 1], [n_x, n_y + 1], [n_x + 1, n_y + 1], [n_x - 1, n_y], [n_x + 1, n_y],
+                        [n_x - 1, n_y - 1], [n_x, n_y - 1], [n_x + 1, n_y - 1]]
+
+            for white_cell in living:
+                for variant in variants:
+                    if white_cell[1] == variant:
+                        neighbours += 1
+            if neighbours == 3:
+                print('Клетка ', neighbor[1], 'родилась')
+                neighbor[0].click_button()
+                dying.remove(neighbor)
+                living.append(neighbor)
+
         for white_cell in living:
             neighbours = 0
             l_x = white_cell[1][0]
@@ -78,11 +96,21 @@ def killing(living):
             if neighbours < 2 or neighbours > 3:
                 white_cell[0].killer()
                 living.remove(white_cell)
-            if old_living == living:
+                dying.append(white_cell)
+                if neighbours<2:
+                    print('Клетка ',white_cell[1],' умерла от одиночества')
+                if neighbours > 3:
+                    print('Клетка ', white_cell[1], ' умерла от перенаселённости')
+
+            if living in old_living:
                 for white_cell in living:
                     white_cell[0].killer()
                 living = []
                 break
+
+    else:
+        print('Игра окончена')
+        sys.exit(0)
 
 
 root = Tk()
